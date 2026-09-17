@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منصة أ. أبوطلال للاختبارات الإلكترونية</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Tahoma,Arial,sans-serif;
+  background:#f3f6fa;
+  color:#172033;
+}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.container{max-width:1200px;margin:auto;padding:20px}
+.hidden{display:none!important}
+
+.topbar{
+  background:#123b63;
+  color:white;
+  padding:16px 22px;
+  box-shadow:0 2px 8px #0002;
+}
+.topbar-inner{
+  max-width:1200px;margin:auto;
+  display:flex;align-items:center;
+  justify-content:space-between;gap:15px;
+}
+.brand{font-size:21px;font-weight:bold}
+.subbrand{font-size:12px;opacity:.8;margin-top:4px}
+
+.card{
+  background:white;
+  border-radius:16px;
+  padding:22px;
+  margin-bottom:18px;
+  box-shadow:0 3px 15px #0000000d;
+}
+.card h2,.card h3{margin-top:0}
+
+.auth{
+  max-width:460px;
+  margin:60px auto;
+}
+input,textarea,select{
+  width:100%;
+  border:1px solid #d7dee8;
+  border-radius:10px;
+  padding:11px 13px;
+  background:white;
+}
+textarea{min-height:100px;resize:vertical}
+label{
+  display:block;
+  font-weight:bold;
+  margin:12px 0 6px;
+}
+
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:10px 16px;
+  color:white;
+  background:#1769aa;
+}
+.btn:hover{filter:brightness(.95)}
+.btn.secondary{background:#64748b}
+.btn.success{background:#16804b}
+.btn.danger{background:#c62828}
+.btn.warning{background:#b77900}
+.btn.light{background:#e8eef5;color:#18324c}
+.btn.small{padding:7px 11px;font-size:13px}
+
+.row{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+}
+.stat{
+  padding:18px;
+  background:#eef5fb;
+  border-radius:14px;
+}
+.stat strong{display:block;font-size:26px;margin-top:6px}
+
+.question-editor{
+  border:1px solid #dbe3ec;
+  border-radius:14px;
+  padding:18px;
+  margin:15px 0;
+  background:#fbfcfe;
+}
+.question-head{
+  display:flex;justify-content:space-between;
+  align-items:center;gap:10px;flex-wrap:wrap;
+}
+.question-number{
+  background:#123b63;color:white;
+  padding:7px 12px;border-radius:20px;
+}
+.option-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;margin:8px 0;
+}
+.answer-box{
+  background:#f2f7fc;
+  border-radius:10px;
+  padding:12px;
+  margin-top:10px;
+}
+.test-question{
+  background:white;
+  border-radius:16px;
+  padding:20px;
+  margin:16px 0;
+  box-shadow:0 2px 10px #0001;
+}
+.test-question h3{margin-top:0}
+.choice{
+  display:block;
+  padding:12px;
+  border:1px solid #dbe3ec;
+  border-radius:10px;
+  margin:8px 0;
+  cursor:pointer;
+}
+.choice:hover{background:#f3f8fd}
+.choice input{width:auto;margin-left:8px}
+
+.student-shell{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+.timer{
+  position:sticky;
+  top:10px;
+  z-index:5;
+  background:#fff3cd;
+  border:1px solid #ffe08a;
+  padding:12px;
+  border-radius:12px;
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:15px;
+}
+.timer.danger{
+  background:#ffe1e1;
+  color:#a40000;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+}
+th,td{
+  border-bottom:1px solid #e3e8ee;
+  padding:10px;
+  text-align:right;
+}
+th{background:#edf3f8}
+
+.badge{
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:15px;
+  font-size:12px;
+  background:#e7edf4;
+}
+.badge.green{background:#d8f3e4;color:#12653b}
+.badge.orange{background:#fff0c2;color:#825b00}
+
+.notice{
+  padding:12px;
+  border-radius:10px;
+  background:#eaf4ff;
+  margin:10px 0;
+}
+.error{
+  padding:12px;
+  border-radius:10px;
+  background:#ffe7e7;
+  color:#a00000;
+  margin:10px 0;
+}
+.success-box{
+  padding:20px;
+  border-radius:14px;
+  background:#e4f7ec;
+  color:#125d35;
+  text-align:center;
+}
+
+.match-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.preview-img{
+  max-width:100%;
+  max-height:280px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+@media(max-width:700px){
+  .topbar-inner{align-items:flex-start;flex-direction:column}
+  .container,.student-shell{padding:12px}
+  .match-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div>
+      <div class="brand">منصة أ. أبوطلال للاختبارات الإلكترونية</div>
+      <div class="subbrand">العلوم والحياة • اختبارات إلكترونية تفاعلية</div>
+    </div>
+    <div id="topActions"></div>
+  </div>
+</header>
+
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   إعداد Supabase
+   ========================================================= */
+
+const SUPABASE_URL = "https://lkshgfbgrhopemxcsokb.supabase.co";
+
+/*
+ضع هنا Publishable Key الخاص بمشروعك في Supabase
+ولا تستخدم service_role key.
+*/
+const SUPABASE_KEY = "sb_publishable_B3qspZkfBv0AApPHkVNC4A_sdPL4h2J";
+
+const sb = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+/* =========================================================
+   أدوات عامة
+   ========================================================= */
+
+const app = document.getElementById("app");
+const topActions = document.getElementById("topActions");
+
+function escapeHtml(value=""){
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function uidCode(){
+  return Math.random().toString(36).substring(2,8).toUpperCase();
+}
+
+function moneyNumber(x){
+  return Number(x || 0).toFixed(2);
+}
+
+function showError(message){
+  app.innerHTML = `
+    <div class="container">
+      <div class="error">${escapeHtml(message)}</div>
+    </div>`;
+}
+
+function studentMode(){
+  return new URLSearchParams(location.search).has("test");
+}
+
+function getTestCode(){
+  return new URLSearchParams(location.search).get("test") || "";
+}
+
+/* =========================================================
+   حالة المعلم
+   ========================================================= */
+
+let currentUser = null;
+let currentTest = null;
+let editorQuestions = [];
+
+async function loadUser(){
+  const {data} = await sb.auth.getSession();
+  currentUser = data.session?.user || null;
+}
+
+/* =========================================================
+   البداية
+   ========================================================= */
+
+(async function init(){
+
+  if(studentMode()){
+    renderStudentStart();
+    return;
+  }
+
+  await loadUser();
+
+  if(currentUser){
+    renderTeacherDashboard();
+  }else{
+    renderTeacherAuth();
+  }
+
+})();
+
+/* =========================================================
+   تسجيل المعلم
+   ========================================================= */
+
+function renderTeacherAuth(){
+
+  topActions.innerHTML = "";
+
+  app.innerHTML = `
+    <div class="container">
+      <div class="card auth">
+        <h2>دخول المعلم</h2>
+
+        <div id="authMessage"></div>
+
+        <label>البريد الإلكتروني</label>
+        <input id="loginEmail" type="email" placeholder="teacher@example.com">
+
+        <label>كلمة المرور</label>
+        <input id="loginPassword" type="password" placeholder="كلمة المرور">
+
+        <div class="row" style="margin-top:15px">
+          <button class="btn" onclick="loginTeacher()">دخول</button>
+          <button class="btn secondary" onclick="signupTeacher()">إنشاء حساب</button>
+        </div>
+
+        <hr style="margin:25px 0">
+
+        <div class="notice">
+          <strong>للطالب:</strong><br>
+          الطالب لا يحتاج إلى تسجيل دخول.
+          يدخل من رابط الاختبار الخاص به.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function signupTeacher(){
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  if(!email || !password){
+    document.getElementById("authMessage").innerHTML =
+      `<div class="error">أدخل البريد وكلمة المرور.</div>`;
+    return;
+  }
+
+  const {error} = await sb.auth.signUp({
+    email,
+    password
+  });
+
+  if(error){
+    document.getElementById("authMessage").innerHTML =
+      `<div class="error">${escapeHtml(error.message)}</div>`;
+    return;
+  }
+
+  document.getElementById("authMessage").innerHTML =
+    `<div class="success-box">تم إنشاء الحساب. إذا كان تأكيد البريد مفعلًا في Supabase، افتح بريدك لتأكيد الحساب.</div>`;
+}
+
+async function loginTeacher(){
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  const {error} = await sb.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    document.getElementById("authMessage").innerHTML =
+      `<div class="error">${escapeHtml(error.message)}</div>`;
+    return;
+  }
+
+  await loadUser();
+  renderTeacherDashboard();
+}
+
+async function logoutTeacher(){
+
+  await sb.auth.signOut();
+  currentUser = null;
+  currentTest = null;
+  renderTeacherAuth();
+}
+
+/* =========================================================
+   لوحة المعلم
+   ========================================================= */
+
+async function renderTeacherDashboard(){
+
+  if(!currentUser){
+    renderTeacherAuth();
+    return;
+  }
+
+  topActions.innerHTML =
+    `<button class="btn small secondary" onclick="logoutTeacher()">تسجيل الخروج</button>`;
+
+  app.innerHTML = `
+    <div class="container">
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <h2>لوحة تحكم المعلم</h2>
+            <div>${escapeHtml(currentUser.email)}</div>
+          </div>
+          <button class="btn success" onclick="startCreateTest()">
+            + إنشاء اختبار جديد
+          </button>
+        </div>
+      </div>
+
+      <div id="testsArea">
+        جاري تحميل الاختبارات...
+      </div>
+
+    </div>
+  `;
+
+  await loadTeacherTests();
+}
+
+async function loadTeacherTests(){
+
+  const area = document.getElementById("testsArea");
+
+  const {data,error} = await sb
+    .from("tests_v2")
+    .select("*")
+    .eq("teacher_id",currentUser.id)
+    .order("created_at",{ascending:false});
+
+  if(error){
+    area.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+    return;
+  }
+
+  if(!data.length){
+    area.innerHTML = `
+      <div class="card">
+        <h3>لا توجد اختبارات بعد</h3>
+        <p>ابدأ بإنشاء أول اختبار لك.</p>
+      </div>`;
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="card">
+      <h3>اختباراتي</h3>
+
+      <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>الاختبار</th>
+            <th>المادة</th>
+            <th>الصف</th>
+            <th>الرمز</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(t=>`
+            <tr>
+              <td><strong>${escapeHtml(t.title)}</strong></td>
+              <td>${escapeHtml(t.subject || "")}</td>
+              <td>${escapeHtml(t.grade || "")}</td>
+              <td><span class="badge">${escapeHtml(t.code)}</span></td>
+              <td>
+                ${t.is_active
+                  ? `<span class="badge green">منشور</span>`
+                  : `<span class="badge">غير منشور</span>`}
+              </td>
+              <td>
+                <div class="row">
+                  <button class="btn small" onclick="editTest('${t.id}')">تحرير</button>
+                  <button class="btn small success" onclick="copyStudentLink('${t.code}')">رابط الطالب</button>
+                  <button class="btn small warning" onclick="viewResults('${t.id}')">النتائج</button>
+                  <button class="btn small light" onclick="toggleTest('${t.id}',${!t.is_active})">
+                    ${t.is_active ? "إيقاف" : "نشر"}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   إنشاء اختبار
+   ========================================================= */
+
+function startCreateTest(){
+
+  currentTest = null;
+
+  editorQuestions = [
+    createEmptyQuestion()
+  ];
+
+  renderTestEditor();
+}
+
+function createEmptyQuestion(){
+
+  return {
+    id:null,
+    question_text:"",
+    question_type:"mcq",
+    points:1,
+    options:["","","",""],
+    correct_answer:null,
+    accepted_answers:[],
+    matching_pairs:[
+      {left:"",right:""},
+      {left:"",right:""}
+    ],
+    image_url:"",
+    manual_grading:false,
+    required:true,
+    sort_order:editorQuestions.length + 1
+  };
+}
+
+async function editTest(testId){
+
+  const {data:test,error:testError} = await sb
+    .from("tests_v2")
+    .select("*")
+    .eq("id",testId)
+    .eq("teacher_id",currentUser.id)
+    .single();
+
+  if(testError){
+    alert(testError.message);
+    return;
+  }
+
+  const {data:questions,error:qError} = await sb
+    .from("questions_v2")
+    .select("*")
+    .eq("test_id",testId)
+    .order("sort_order");
+
+  if(qError){
+    alert(qError.message);
+    return;
+  }
+
+  currentTest = test;
+
+  editorQuestions = questions.map(q=>({
+    id:q.id,
+    question_text:q.question_text,
+    question_type:q.question_type,
+    points:q.points,
+    options:q.options || [],
+    correct_answer:q.correct_answer,
+    accepted_answers:q.accepted_answers || [],
+    matching_pairs:q.matching_pairs || [],
+    image_url:q.image_url || "",
+    manual_grading:q.manual_grading,
+    required:q.required,
+    sort_order:q.sort_order
+  }));
+
+  if(!editorQuestions.length){
+    editorQuestions=[createEmptyQuestion()];
+  }
+
+  renderTestEditor();
+}
+
+function renderTestEditor(){
+
+  app.innerHTML = `
+    <div class="container">
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <h2>${currentTest ? "تحرير الاختبار" : "إنشاء اختبار جديد"}</h2>
+            <p>أنشئ اختبارًا يجمع بين الأسئلة الموضوعية والكتابية.</p>
+          </div>
+
+          <button class="btn secondary" onclick="renderTeacherDashboard()">
+            العودة
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+
+        <h3>بيانات الاختبار</h3>
+
+        <div class="grid">
+
+          <div>
+            <label>عنوان الاختبار</label>
+            <input id="testTitle"
+              value="${escapeHtml(currentTest?.title || "")}"
+              placeholder="مثال: اختبار الوحدة الأولى">
+          </div>
+
+          <div>
+            <label>المادة</label>
+            <input id="testSubject"
+              value="${escapeHtml(currentTest?.subject || "العلوم والحياة")}">
+          </div>
+
+          <div>
+            <label>الصف</label>
+            <input id="testGrade"
+              value="${escapeHtml(currentTest?.grade || "")}"
+              placeholder="مثال: الصف الخامس الأساسي">
+          </div>
+
+          <div>
+            <label>مدة الاختبار بالدقائق</label>
+            <input id="testDuration"
+              type="number"
+              min="1"
+              value="${currentTest?.duration_minutes || 30}">
+          </div>
+
+        </div>
+
+        <label>وصف الاختبار</label>
+        <textarea id="testDescription">${escapeHtml(currentTest?.description || "")}</textarea>
+
+        <div class="grid">
+
+          <label>
+            <input id="showResult"
+              type="checkbox"
+              style="width:auto"
+              ${currentTest?.show_result !== false ? "checked":""}>
+            إظهار النتيجة للطالب
+          </label>
+
+          <label>
+            <input id="allowRetake"
+              type="checkbox"
+              style="width:auto"
+              ${currentTest?.allow_retake !== false ? "checked":""}>
+            السماح بمحاولة أخرى
+          </label>
+
+        </div>
+
+      </div>
+
+      <div class="card">
+
+        <div class="row" style="justify-content:space-between">
+          <h3>الأسئلة</h3>
+
+          <button class="btn success" onclick="addQuestion()">
+            + إضافة سؤال
+          </button>
+        </div>
+
+        <div id="questionsEditor"></div>
+
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <button class="btn success" onclick="saveTest()">
+            ${currentTest ? "حفظ التعديلات" : "إنشاء الاختبار"}
+          </button>
+
+          <button class="btn secondary" onclick="renderTeacherDashboard()">
+            إلغاء
+          </button>
+        </div>
+
+        <div id="saveMessage"></div>
+      </div>
+
+    </div>
+  `;
+
+  renderQuestionsEditor();
+}
+
+function addQuestion(){
+
+  editorQuestions.push({
+    ...createEmptyQuestion(),
+    sort_order:editorQuestions.length+1
+  });
+
+  renderQuestionsEditor();
+}
+
+function removeQuestion(index){
+
+  if(!confirm("هل تريد حذف هذا السؤال؟")) return;
+
+  editorQuestions.splice(index,1);
+
+  editorQuestions.forEach((q,i)=>{
+    q.sort_order=i+1;
+  });
+
+  renderQuestionsEditor();
+}
+
+function questionTypeLabel(type){
+
+  const labels={
+    mcq:"اختيار من متعدد",
+    true_false:"صح / خطأ",
+    multiple_choice:"اختيار متعدد",
+    fill_blank:"ملء الفراغ",
+    short_answer:"إجابة قصيرة",
+    essay:"سؤال مقالي",
+    numeric:"إجابة رقمية",
+    matching:"مطابقة",
+    image_question:"سؤال مع صورة",
+    image_answer:"إجابة بصورة"
+  };
+
+  return labels[type] || type;
+}
+
+function renderQuestionsEditor(){
+
+  const box=document.getElementById("questionsEditor");
+
+  box.innerHTML=editorQuestions.map((q,i)=>`
+
+    <div class="question-editor">
+
+      <div class="question-head">
+        <span class="question-number">السؤال ${i+1}</span>
+
+        <button class="btn danger small"
+          onclick="removeQuestion(${i})">
+          حذف
+        </button>
+      </div>
+
+      <label>نوع السؤال</label>
+
+      <select onchange="changeQuestionType(${i},this.value)">
+        ${[
+          ["mcq","اختيار من متعدد"],
+          ["true_false","صح / خطأ"],
+          ["multiple_choice","اختيار متعدد"],
+          ["fill_blank","ملء الفراغ"],
+          ["short_answer","إجابة قصيرة"],
+          ["essay","سؤال مقالي"],
+          ["numeric","إجابة رقمية"],
+          ["matching","مطابقة"],
+          ["image_question","سؤال مع صورة"],
+          ["image_answer","إجابة بصورة"]
+        ].map(x=>`
+          <option value="${x[0]}" ${q.question_type===x[0]?"selected":""}>
+            ${x[1]}
+          </option>
+        `).join("")}
+      </select>
+
+      <label>نص السؤال</label>
+
+      <textarea
+        onchange="updateQuestion(${i},'question_text',this.value)"
+        placeholder="اكتب السؤال هنا..."
+      >${escapeHtml(q.question_text)}</textarea>
+
+      <div class="grid">
+
+        <div>
+          <label>الدرجة</label>
+          <input type="number" min="0.5" step="0.5"
+            value="${q.points}"
+            onchange="updateQuestion(${i},'points',Number(this.value))">
+        </div>
+
+        <div>
+          <label>إجباري؟</label>
+          <select onchange="updateQuestion(${i},'required',this.value==='true')">
+            <option value="true" ${q.required?"selected":""}>نعم</option>
+            <option value="false" ${!q.required?"selected":""}>لا</option>
+          </select>
+        </div>
+
+      </div>
+
+      ${questionSpecificEditor(q,i)}
+
+    </div>
+
+  `).join("");
+}
+
+function updateQuestion(i,key,value){
+  editorQuestions[i][key]=value;
+}
+
+function changeQuestionType(i,type){
+
+  editorQuestions[i].question_type=type;
+
+  if(type==="true_false"){
+    editorQuestions[i].options=["صح","خطأ"];
+    editorQuestions[i].correct_answer=0;
+  }
+
+  if(type==="mcq" || type==="multiple_choice"){
+    if(!editorQuestions[i].options?.length)
+      editorQuestions[i].options=["","","",""];
+  }
+
+  if(type==="matching"){
+    editorQuestions[i].matching_pairs=[
+      {left:"",right:""},
+      {left:"",right:""}
+    ];
+  }
+
+  if(type==="essay" || type==="image_answer"){
+    editorQuestions[i].manual_grading=true;
+  }else{
+    editorQuestions[i].manual_grading=false;
+  }
+
+  renderQuestionsEditor();
+}
+
+function questionSpecificEditor(q,i){
+
+  if(q.question_type==="mcq")
+    return renderMCQ(q,i,false);
+
+  if(q.question_type==="true_false")
+    return renderMCQ(q,i,true);
+
+  if(q.question_type==="multiple_choice")
+    return renderMCQ(q,i,false,true);
+
+  if(q.question_type==="fill_blank" ||
+     q.question_type==="short_answer")
+    return renderTextAnswer(q,i);
+
+  if(q.question_type==="numeric")
+    return renderNumeric(q,i);
+
+  if(q.question_type==="matching")
+    return renderMatching(q,i);
+
+  if(q.question_type==="image_question")
+    return renderImageQuestion(q,i);
+
+  if(q.question_type==="image_answer")
+    return `
+      <div class="notice">
+        الطالب سيجيب برفع صورة، وسيتم تصحيح الإجابة يدويًا.
+      </div>
+    `;
+
+  if(q.question_type==="essay")
+    return `
+      <div class="notice">
+        السؤال المقالي سيظهر للطالب كحقل إجابة طويل،
+        وسيتم تصحيحه يدويًا.
+      </div>
+    `;
+
+  return "";
+}
+
+function renderMCQ(q,i,isTF=false,isMultiple=false){
+
+  if(isTF){
+    return `
+      <div class="answer-box">
+        <label>الإجابة الصحيحة</label>
+        <select onchange="updateQuestion(${i},'correct_answer',Number(this.value))">
+          <option value="0" ${q.correct_answer===0?"selected":""}>صح</option>
+          <option value="1" ${q.correct_answer===1?"selected":""}>خطأ</option>
+        </select>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="answer-box">
+      <label>
+        ${isMultiple
+          ? "الاختيارات — حدد الإجابات الصحيحة"
+          : "الاختيارات — حدد الإجابة الصحيحة"}
+      </label>
+
+      ${q.options.map((op,j)=>`
+        <div class="option-row">
+          <input
+            value="${escapeHtml(op)}"
+            placeholder="الخيار ${j+1}"
+            onchange="updateOption(${i},${j},this.value)"
+          >
+
+          ${
+            isMultiple
+            ? `<input
+                 type="checkbox"
+                 style="width:auto"
+                 ${Array.isArray(q.correct_answer)&&q.correct_answer.includes(j)?"checked":""}
+                 onchange="toggleMultipleAnswer(${i},${j},this.checked)">
+              `
+            : `<input
+                 type="radio"
+                 name="correct_${i}"
+                 style="width:auto"
+                 ${q.correct_answer===j?"checked":""}
+                 onchange="updateQuestion(${i},'correct_answer',${j})">
+              `
+          }
+        </div>
+      `).join("")}
+
+      <button class="btn small light" onclick="addOption(${i})">
+        + إضافة خيار
+      </button>
+    </div>
+  `;
+}
+
+function updateOption(i,j,value){
+  editorQuestions[i].options[j]=value;
+}
+
+function addOption(i){
+  editorQuestions[i].options.push("");
+  renderQuestionsEditor();
+}
+
+function toggleMultipleAnswer(i,j,checked){
+
+  if(!Array.isArray(editorQuestions[i].correct_answer))
+    editorQuestions[i].correct_answer=[];
+
+  if(checked){
+    if(!editorQuestions[i].correct_answer.includes(j))
+      editorQuestions[i].correct_answer.push(j);
+  }else{
+    editorQuestions[i].correct_answer=
+      editorQuestions[i].correct_answer.filter(x=>x!==j);
+  }
+
+  editorQuestions[i].correct_answer.sort();
+}
+
+function renderTextAnswer(q,i){
+
+  return `
+    <div class="answer-box">
+
+      <label>الإجابات المقبولة</label>
+
+      <textarea
+        placeholder="اكتب كل إجابة مقبولة في سطر مستقل"
+        onchange="setAcceptedAnswers(${i},this.value)"
+      >${(q.accepted_answers||[]).join("\n")}</textarea>
+
+      <div class="notice">
+        يمكن للنظام مقارنة الإجابات النصية تلقائيًا،
+        ويمكنك لاحقًا جعل السؤال يحتاج مراجعة المعلم.
+      </div>
+
+    </div>
+  `;
+}
+
+function setAcceptedAnswers(i,value){
+
+  editorQuestions[i].accepted_answers=
+    value.split("\n")
+      .map(x=>x.trim())
+      .filter(Boolean);
+}
+
+function renderNumeric(q,i){
+
+  return `
+    <div class="answer-box">
+      <label>الإجابة الرقمية الصحيحة</label>
+
+      <input
+        type="number"
+        value="${q.correct_answer ?? ""}"
+        onchange="updateQuestion(${i},'correct_answer',Number(this.value))">
+    </div>
+  `;
+}
+
+function renderMatching(q,i){
+
+  return `
+    <div class="answer-box">
+
+      <label>عناصر المطابقة</label>
+
+      ${(q.matching_pairs||[]).map((p,j)=>`
+        <div class="match-grid" style="margin:8px 0">
+
+          <input
+            placeholder="العنصر ${j+1}"
+            value="${escapeHtml(p.left||"")}"
+            onchange="updatePair(${i},${j},'left',this.value)">
+
+          <input
+            placeholder="المطابق"
+            value="${escapeHtml(p.right||"")}"
+            onchange="updatePair(${i},${j},'right',this.value)">
+
+        </div>
+      `).join("")}
+
+      <button class="btn small light"
+        onclick="addPair(${i})">
+        + إضافة زوج
+      </button>
+
+    </div>
+  `;
+}
+
+function updatePair(i,j,key,value){
+  editorQuestions[i].matching_pairs[j][key]=value;
+}
+
+function addPair(i){
+  editorQuestions[i].matching_pairs.push({left:"",right:""});
+  renderQuestionsEditor();
+}
+
+function renderImageQuestion(q,i){
+
+  return `
+    <div class="answer-box">
+
+      <label>رابط صورة السؤال</label>
+
+      <input
+        value="${escapeHtml(q.image_url||"")}"
+        placeholder="https://..."
+        onchange="updateQuestion(${i},'image_url',this.value)">
+
+      ${
+        q.image_url
+        ? `<img class="preview-img" src="${escapeHtml(q.image_url)}">`
+        : ""
+      }
+
+    </div>
+  `;
+}
+
+/* =========================================================
+   حفظ الاختبار
+   ========================================================= */
+
+async function saveTest(){
+
+  const title=document.getElementById("testTitle").value.trim();
+
+  if(!title){
+    alert("اكتب عنوان الاختبار.");
+    return;
+  }
+
+  const testData={
+    title,
+    subject:document.getElementById("testSubject").value.trim(),
+    grade:document.getElementById("testGrade").value.trim(),
+    description:document.getElementById("testDescription").value.trim(),
+    duration_minutes:Number(document.getElementById("testDuration").value)||30,
+    show_result:document.getElementById("showResult").checked,
+    allow_retake:document.getElementById("allowRetake").checked
+  };
+
+  const message=document.getElementById("saveMessage");
+
+  try{
+
+    let testId;
+    let code;
+
+    if(currentTest){
+
+      const {error}=await sb
+        .from("tests_v2")
+        .update(testData)
+        .eq("id",currentTest.id)
+        .eq("teacher_id",currentUser.id);
+
+      if(error) throw error;
+
+      testId=currentTest.id;
+      code=currentTest.code;
+
+      await sb
+        .from("questions_v2")
+        .delete()
+        .eq("test_id",testId);
+
+    }else{
+
+      code=uidCode();
+
+      const {data,error}=await sb
+        .from("tests_v2")
+        .insert({
+          ...testData,
+          teacher_id:currentUser.id,
+          code
+        })
+        .select()
+        .single();
+
+      if(error) throw error;
+
+      testId=data.id;
+    }
+
+    const questions=editorQuestions.map((q,i)=>({
+      test_id:testId,
+      question_text:q.question_text.trim(),
+      question_type:q.question_type,
+      points:Number(q.points)||1,
+      options:q.options || [],
+      correct_answer:q.correct_answer,
+      accepted_answers:q.accepted_answers || [],
+      matching_pairs:q.matching_pairs || [],
+      image_url:q.image_url || null,
+      manual_grading:q.manual_grading ||
+        ["essay","image_answer"].includes(q.question_type),
+      required:q.required!==false,
+      sort_order:i+1
+    }));
+
+    const {error:qError}=await sb
+      .from("questions_v2")
+      .insert(questions);
+
+    if(qError) throw qError;
+
+    const {data:savedTest}=await sb
+      .from("tests_v2")
+      .select("*")
+      .eq("id",testId)
+      .single();
+
+    currentTest=savedTest;
+
+    message.innerHTML=`
+      <div class="success-box">
+        تم حفظ الاختبار بنجاح.
+        <br><br>
+        <strong>رمز الاختبار:</strong> ${escapeHtml(code)}
+        <br><br>
+        يمكنك الآن نشره للطلاب.
+      </div>
+    `;
+
+    setTimeout(()=>{
+      renderTeacherDashboard();
+    },1200);
+
+  }catch(error){
+
+    message.innerHTML=
+      `<div class="error">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+/* =========================================================
+   نشر / إيقاف
+   ========================================================= */
+
+async function toggleTest(id,state){
+
+  const {error}=await sb
+    .from("tests_v2")
+    .update({is_active:state})
+    .eq("id",id)
+    .eq("teacher_id",currentUser.id);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  loadTeacherTests();
+}
+
+/* =========================================================
+   رابط الطالب
+   ========================================================= */
+
+function studentLink(code){
+
+  return location.origin +
+    location.pathname +
+    "?test=" +
+    encodeURIComponent(code);
+}
+
+async function copyStudentLink(code){
+
+  const link=studentLink(code);
+
+  try{
+    await navigator.clipboard.writeText(link);
+    alert(
+      "تم نسخ رابط الطالب:\n\n"+
+      link
+    );
+  }catch{
+    prompt("انسخ الرابط:",link);
+  }
+}
+
+/* =========================================================
+   نتائج الطلاب
+   ========================================================= */
+
+async function viewResults(testId){
+
+  const {data:test,error:testError}=await sb
+    .from("tests_v2")
+    .select("*")
+    .eq("id",testId)
+    .single();
+
+  if(testError){
+    alert(testError.message);
+    return;
+  }
+
+  currentTest=test;
+
+  const {data:attempts,error}=await sb
+    .from("attempts_v2")
+    .select("*")
+    .eq("test_id",testId)
+    .order("created_at",{ascending:false});
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  app.innerHTML=`
+    <div class="container">
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <h2>نتائج: ${escapeHtml(test.title)}</h2>
+            <div>رمز الاختبار: ${escapeHtml(test.code)}</div>
+          </div>
+
+          <div class="row">
+            <button class="btn success"
+              onclick="exportResults('${testId}')">
+              تصدير Excel
+            </button>
+
+            <button class="btn secondary"
+              onclick="renderTeacherDashboard()">
+              العودة
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+
+        ${
+          attempts.length
+          ? `
+          <div style="overflow:auto">
+          <table id="resultsTable">
+            <thead>
+              <tr>
+                <th>الطالب</th>
+                <th>الدرجة الآلية</th>
+                <th>الدرجة النهائية</th>
+                <th>النسبة</th>
+                <th>الحالة</th>
+                <th>الإجراء</th>
+              </tr>
+            </thead>
+
+            <tbody>
+            ${attempts.map(a=>`
+              <tr>
+                <td>${escapeHtml(a.student_name)}</td>
+                <td>${moneyNumber(a.auto_score)}</td>
+                <td>${moneyNumber(a.total_score)}</td>
+                <td>${moneyNumber(a.percentage)}%</td>
+                <td>
+                  ${
+                    a.status==="needs_review"
+                    ? `<span class="badge orange">بحاجة لتصحيح</span>`
+                    : `<span class="badge green">مصحح</span>`
+                  }
+                </td>
+                <td>
+                  <button class="btn small"
+                    onclick="gradeAttempt('${a.id}')">
+                    ${a.status==="needs_review"?"تصحيح":"عرض"}
+                  </button>
+                </td>
+              </tr>
+            `).join("")}
+            </tbody>
+          </table>
+          </div>
+          `
+          : `<div class="notice">لم يقدم أي طالب الاختبار بعد.</div>`
+        }
+
+      </div>
+
+    </div>
+  `;
+}
+
+/* =========================================================
+   التصحيح اليدوي
+   ========================================================= */
+
+async function gradeAttempt(attemptId){
+
+  const {data:attempt,error:aError}=await sb
+    .from("attempts_v2")
+    .select("*")
+    .eq("id",attemptId)
+    .single();
+
+  if(aError){
+    alert(aError.message);
+    return;
+  }
+
+  const {data:answers,error:ansError}=await sb
+    .from("answers_v2")
+    .select(`
+      *,
+      questions_v2 (
+        question_text,
+        question_type,
+        points
+      )
+    `)
+    .eq("attempt_id",attemptId);
+
+  if(ansError){
+    alert(ansError.message);
+    return;
+  }
+
+  app.innerHTML=`
+    <div class="container">
+
+      <div class="card">
+        <h2>تصحيح إجابات الطالب</h2>
+        <p>
+          الطالب:
+          <strong>${escapeHtml(attempt.student_name)}</strong>
+        </p>
+
+        <div class="notice">
+          الدرجة الآلية:
+          <strong>${moneyNumber(attempt.auto_score)}</strong>
+        </div>
+      </div>
+
+      <div id="gradingArea"></div>
+
+      <div class="card">
+        <button class="btn success"
+          onclick="saveManualGrades('${attemptId}')">
+          حفظ التصحيح النهائي
+        </button>
+
+        <button class="btn secondary"
+          onclick="viewResults('${attempt.test_id}')">
+          العودة
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  const area=document.getElementById("gradingArea");
+
+  area.innerHTML=answers.map((a,i)=>{
+
+    const q=a.questions_v2;
+
+    return `
+      <div class="card">
+
+        <h3>السؤال ${i+1}</h3>
+
+        <p><strong>${escapeHtml(q.question_text)}</strong></p>
+
+        <div class="answer-box">
+          <strong>إجابة الطالب:</strong>
+          <div style="white-space:pre-wrap;margin-top:8px">
+            ${escapeHtml(
+              typeof a.answer==="string"
+                ? a.answer
+                : JSON.stringify(a.answer)
+            )}
+          </div>
+        </div>
+
+        <div class="grid">
+
+          <div>
+            <label>الدرجة المستحقة من ${q.points}</label>
+            <input
+              class="manual-score"
+              data-id="${a.id}"
+              data-max="${q.points}"
+              type="number"
+              min="0"
+              max="${q.points}"
+              step="0.5"
+              value="${a.manual_points ?? 0}">
+          </div>
+
+          <div>
+            <label>ملاحظة المعلم</label>
+            <input
+              class="teacher-feedback"
+              data-id="${a.id}"
+              value="${escapeHtml(a.teacher_feedback||"")}"
+              placeholder="ملاحظة اختيارية">
+          </div>
+
+        </div>
+
+      </div>
+    `;
+  }).join("");
+}
+
+async function saveManualGrades(attemptId){
+
+  const scores=[...document.querySelectorAll(".manual-score")];
+  const feedback=[...document.querySelectorAll(".teacher-feedback")];
+
+  let manualTotal=0;
+
+  for(const input of scores){
+
+    const id=input.dataset.id;
+    const max=Number(input.dataset.max);
+    let score=Number(input.value)||0;
+
+    score=Math.max(0,Math.min(max,score));
+    manualTotal+=score;
+
+    const note=
+      feedback.find(x=>x.dataset.id===id)?.value || "";
+
+    const {error}=await sb
+      .from("answers_v2")
+      .update({
+        manual_points:score,
+        teacher_feedback:note,
+        graded_by_teacher:true
+      })
+      .eq("id",id);
+
+    if(error){
+      alert(error.message);
+      return;
+    }
+  }
+
+  const {data:attempt}=await sb
+    .from("attempts_v2")
+    .select("auto_score,test_id")
+    .eq("id",attemptId)
+    .single();
+
+  const {data:questions}=await sb
+    .from("questions_v2")
+    .select("points")
+    .eq("test_id",attempt.test_id);
+
+  const totalPossible=
+    questions.reduce((sum,q)=>sum+Number(q.points||0),0);
+
+  const finalScore=
+    Number(attempt.auto_score||0)+manualTotal;
+
+  const percentage=
+    totalPossible
+      ? Math.round((finalScore/totalPossible)*10000)/100
+      : 0;
+
+  const {error}=await sb
+    .from("attempts_v2")
+    .update({
+      manual_score:manualTotal,
+      total_score:finalScore,
+      percentage,
+      status:"graded"
+    })
+    .eq("id",attemptId);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  alert("تم حفظ التصحيح النهائي.");
+  viewResults(attempt.test_id);
+}
+
+/* =========================================================
+   تصدير Excel
+   ========================================================= */
+
+async function exportResults(testId){
+
+  const {data:attempts,error}=await sb
+    .from("attempts_v2")
+    .select("*")
+    .eq("test_id",testId)
+    .order("created_at");
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  const rows=attempts.map((a,i)=>({
+    "الرقم":i+1,
+    "اسم الطالب":a.student_name,
+    "الدرجة الآلية":Number(a.auto_score||0),
+    "درجة التصحيح اليدوي":Number(a.manual_score||0),
+    "الدرجة النهائية":Number(a.total_score||0),
+    "النسبة المئوية":Number(a.percentage||0),
+    "الحالة":a.status
+  }));
+
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb,ws,"النتائج");
+
+  XLSX.writeFile(
+    wb,
+    "نتائج_الاختبار.xlsx"
+  );
+}
+
+/* =========================================================
+   واجهة الطالب
+   ========================================================= */
+
+let studentTest=null;
+let studentAttempt=null;
+let studentTimer=null;
+let studentAnswers={};
+
+async function renderStudentStart(){
+
+  topActions.innerHTML="";
+
+  const code=getTestCode();
+
+  app.innerHTML=`
+    <div class="student-shell">
+
+      <div class="card">
+
+        <h2>اختبار إلكتروني</h2>
+
+        <div id="studentLoad">
+          جاري تحميل الاختبار...
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+  const {data,error}=await sb.rpc(
+    "get_public_test_v2",
+    {p_code:code}
+  );
+
+  if(error){
+    showError(error.message);
+    return;
+  }
+
+  if(!data){
+    showError("الاختبار غير موجود أو غير منشور.");
+    return;
+  }
+
+  studentTest=data;
+
+  document.getElementById("studentLoad").innerHTML=`
+    <h2>${escapeHtml(data.title)}</h2>
+
+    <p>
+      <strong>المادة:</strong>
+      ${escapeHtml(data.subject||"")}
+    </p>
+
+    <p>
+      <strong>الصف:</strong>
+      ${escapeHtml(data.grade||"")}
+    </p>
+
+    ${
+      data.description
+      ? `<div class="notice">${escapeHtml(data.description)}</div>`
+      : ""
+    }
+
+    <div class="notice">
+      مدة الاختبار:
+      <strong>${data.duration_minutes} دقيقة</strong>
+      <br>
+      عدد الأسئلة:
+      <strong>${data.questions?.length || 0}</strong>
+    </div>
+
+    <label>اسم الطالب</label>
+    <input id="studentName" placeholder="اكتب اسمك الكامل">
+
+    <button class="btn success"
+      style="margin-top:15px"
+      onclick="startStudentTest()">
+      بدء الاختبار
+    </button>
+  `;
+}
+
+async function startStudentTest(){
+
+  const name=document.getElementById("studentName").value.trim();
+
+  if(!name){
+    alert("اكتب اسم الطالب.");
+    return;
+  }
+
+  const {data,error}=await sb.rpc(
+    "start_attempt_v2",
+    {
+      p_code:getTestCode(),
+      p_student_name:name
+    }
+  );
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  studentAttempt=data;
+  studentAnswers={};
+
+  renderStudentTest();
+
+  startTimer(
+    Number(studentTest.duration_minutes||30)*60
+  );
+}
+
+function renderStudentTest(){
+
+  app.innerHTML=`
+    <div class="student-shell">
+
+      <div class="card">
+        <h2>${escapeHtml(studentTest.title)}</h2>
+        <p>
+          الطالب:
+          <strong>
+            ${escapeHtml(
+              document.getElementById("studentName")?.value || ""
+            )}
+          </strong>
+        </p>
+      </div>
+
+      <div id="timer" class="timer">
+        الوقت المتبقي: --
+      </div>
+
+      <form id="studentForm">
+
+        ${studentTest.questions.map((q,i)=>
+          renderStudentQuestion(q,i)
+        ).join("")}
+
+        <div class="card">
+          <button type="button"
+            class="btn success"
+            onclick="submitStudentTest(false)">
+            إرسال الاختبار
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  `;
+}
+
+function renderStudentQuestion(q,i){
+
+  const title=`
+    <h3>
+      ${i+1}. ${escapeHtml(q.question_text)}
+      <span class="badge">${q.points} درجة</span>
+    </h3>
+  `;
+
+  let body="";
+
+  if(q.image_url){
+    body+=`
+      <img class="preview-img"
+        src="${escapeHtml(q.image_url)}"
+        alt="صورة السؤال">
+    `;
+  }
+
+  if(q.question_type==="mcq" ||
+     q.question_type==="true_false"){
+
+    body+=q.options.map((op,j)=>`
+      <label class="choice">
+        <input
+          type="radio"
+          name="q_${q.id}"
+          value="${j}">
+        ${escapeHtml(op)}
+      </label>
+    `).join("");
+  }
+
+  else if(q.question_type==="multiple_choice"){
+
+    body+=q.options.map((op,j)=>`
+      <label class="choice">
+        <input
+          type="checkbox"
+          name="q_${q.id}"
+          value="${j}">
+        ${escapeHtml(op)}
+      </label>
+    `).join("");
+  }
+
+  else if(q.question_type==="fill_blank" ||
+          q.question_type==="short_answer"){
+
+    body+=`
+      <input
+        id="answer_${q.id}"
+        placeholder="اكتب إجابتك هنا">
+    `;
+  }
+
+  else if(q.question_type==="numeric"){
+
+    body+=`
+      <input
+        id="answer_${q.id}"
+        type="number"
+        placeholder="اكتب الرقم">
+    `;
+  }
+
+  else if(q.question_type==="essay"){
+
+    body+=`
+      <textarea
+        id="answer_${q.id}"
+        placeholder="اكتب إجابتك بالتفصيل..."
+        style="min-height:180px"></textarea>
+    `;
+  }
+
+  else if(q.question_type==="matching"){
+
+    const pairs=q.matching_pairs||[];
+
+    body+=pairs.map((p,j)=>`
+      <div class="match-grid" style="margin:10px 0">
+
+        <div class="notice">
+          ${escapeHtml(p.left)}
+        </div>
+
+        <select id="match_${q.id}_${j}">
+          <option value="">اختر المطابق</option>
+          ${pairs.map((x,k)=>`
+            <option value="${k}">
+              ${escapeHtml(x.right)}
+            </option>
+          `).join("")}
+        </select>
+
+      </div>
+    `).join("");
+  }
+
+  else if(q.question_type==="image_question"){
+
+    body+=`
+      <input
+        id="answer_${q.id}"
+        placeholder="اكتب إجابتك">
+    `;
+  }
+
+  else if(q.question_type==="image_answer"){
+
+    body+=`
+      <input
+        id="image_${q.id}"
+        type="file"
+        accept="image/*"
+        onchange="previewStudentImage('${q.id}',this)">
+
+      <div id="preview_${q.id}"></div>
+    `;
+  }
+
+  return `
+    <div class="test-question">
+      ${title}
+      ${body}
+    </div>
+  `;
+}
+
+function previewStudentImage(id,input){
+
+  const file=input.files?.[0];
+
+  if(!file) return;
+
+  const reader=new FileReader();
+
+  reader.onload=e=>{
+    document.getElementById(`preview_${id}`).innerHTML=`
+      <img
+        class="preview-img"
+        src="${e.target.result}">
+    `;
+  };
+
+  reader.readAsDataURL(file);
+}
+
+/* =========================================================
+   جمع الإجابات
+   ========================================================= */
+
+async function collectStudentAnswers(){
+
+  const answers=[];
+
+  for(const q of studentTest.questions){
+
+    let answer=null;
+
+    if(q.question_type==="mcq" ||
+       q.question_type==="true_false"){
+
+      const selected=document.querySelector(
+        `input[name="q_${q.id}"]:checked`
+      );
+
+      if(selected)
+        answer=Number(selected.value);
+    }
+
+    else if(q.question_type==="multiple_choice"){
+
+      answer=[...document.querySelectorAll(
+        `input[name="q_${q.id}"]:checked`
+      )]
+      .map(x=>Number(x.value))
+      .sort();
+    }
+
+    else if(
+      ["fill_blank","short_answer","numeric","essay","image_question"]
+      .includes(q.question_type)
+    ){
+
+      const input=document.getElementById(`answer_${q.id}`);
+
+      if(input)
+        answer=input.value;
+    }
+
+    else if(q.question_type==="matching"){
+
+      answer={};
+
+      (q.matching_pairs||[]).forEach((p,j)=>{
+        const select=document.getElementById(
+          `match_${q.id}_${j}`
+        );
+
+        answer[j]=select?.value ?? "";
+      });
+    }
+
+    else if(q.question_type==="image_answer"){
+
+      const input=document.getElementById(`image_${q.id}`);
+
+      if(input?.files?.[0]){
+
+        answer=await fileToDataUrl(input.files[0]);
+
+      }else{
+        answer=null;
+      }
+    }
+
+    answers.push({
+      question_id:q.id,
+      answer
+    });
+  }
+
+  return answers;
+}
+
+function fileToDataUrl(file){
+
+  return new Promise((resolve,reject)=>{
+
+    const reader=new FileReader();
+
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=reject;
+
+    reader.readAsDataURL(file);
+  });
+}
+
+/* =========================================================
+   إرسال الاختبار
+   ========================================================= */
+
+async function submitStudentTest(auto=false){
+
+  if(!auto){
+
+    if(!confirm(
+      "هل أنت متأكد من إرسال الاختبار؟"
+    )) return;
+  }
+
+  clearInterval(studentTimer);
+
+  const answers=await collectStudentAnswers();
+
+  const {data,error}=await sb.rpc(
+    "submit_attempt_v2",
+    {
+      p_attempt_token:studentAttempt.attempt_token,
+      p_answers:answers
+    }
+  );
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  renderStudentResult(data);
+}
+
+function renderStudentResult(result){
+
+  app.innerHTML=`
+    <div class="student-shell">
+
+      <div class="card">
+
+        <div class="success-box">
+
+          <h2>تم إرسال الاختبار بنجاح ✅</h2>
+
+          ${
+            studentTest.show_result
+            ? `
+              <p style="font-size:20px">
+                الدرجة:
+                <strong>${moneyNumber(result.auto_score)}</strong>
+              </p>
+
+              <p style="font-size:20px">
+                النسبة:
+                <strong>${moneyNumber(result.percentage)}%</strong>
+              </p>
+
+              ${
+                result.needs_review
+                ? `
+                  <div class="notice">
+                    توجد أسئلة تحتاج إلى تصحيح المعلم.
+                    قد تتغير الدرجة النهائية بعد اعتماد التصحيح.
+                  </div>
+                  `
+                : ""
+              }
+            `
+            : `
+              <p>
+                تم إرسال إجاباتك بنجاح.
+              </p>
+            `
+          }
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+/* =========================================================
+   المؤقت
+   ========================================================= */
+
+function startTimer(seconds){
+
+  clearInterval(studentTimer);
+
+  const timer=document.getElementById("timer");
+
+  let remaining=seconds;
+
+  function update(){
+
+    const minutes=Math.floor(remaining/60);
+    const secs=remaining%60;
+
+    timer.textContent=
+      `الوقت المتبقي: ${minutes}:${String(secs).padStart(2,"0")}`;
+
+    if(remaining<=60)
+      timer.classList.add("danger");
+
+    if(remaining<=0){
+
+      clearInterval(studentTimer);
+
+      submitStudentTest(true);
+
+      return;
+    }
+
+    remaining--;
+  }
+
+  update();
+
+  studentTimer=setInterval(update,1000);
+}
+
+/* =========================================================
+   حماية بسيطة من أخطاء الصفحة
+   ========================================================= */
+
+window.addEventListener("error",e=>{
+  console.error(e.error || e.message);
+});
+
+</script>
+
+</body>
+</html>
