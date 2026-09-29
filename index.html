@@ -7,6 +7,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -442,9 +443,14 @@ async function renderTeacherDashboard(){
             <h2>لوحة تحكم المعلم</h2>
             <div>${escapeHtml(currentUser.email)}</div>
           </div>
-          <button class="btn success" onclick="startCreateTest()">
-            + إنشاء اختبار جديد
-          </button>
+          <div class="row">
+            <button class="btn success" onclick="startCreateTest()">
+              + إنشاء امتحان جديد
+            </button>
+            <button class="btn" onclick="renderAIGenerator()">
+              🤖 توليد امتحان بالذكاء الاصطناعي
+            </button>
+          </div>
         </div>
       </div>
 
@@ -528,6 +534,109 @@ async function loadTeacherTests(){
     </div>
   `;
 }
+
+/* =========================================================
+   توليد امتحان بالذكاء الاصطناعي من PDF
+   ========================================================= */
+
+function renderAIGenerator(){
+  app.innerHTML = `
+    <div class="container">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div><h2>🤖 توليد امتحان بالذكاء الاصطناعي</h2><p>ارفع ملف PDF من الكتاب، وحدد الصف والدرس وعدد وأنواع الأسئلة، ثم راجع المسودة قبل اعتمادها.</p></div>
+          <button class="btn secondary" onclick="renderTeacherDashboard()">العودة</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="notice"><strong>مهم:</strong> التوليد يعتمد على النص المستخرج من الملف فقط، ثم تظهر الأسئلة أمامك للمراجعة والتعديل قبل إنشاء الامتحان.</div>
+        <label>ملف الكتاب أو الدرس PDF</label>
+        <input id="aiPdf" type="file" accept="application/pdf" onchange="prepareAIPdf()">
+        <div id="aiPdfInfo" class="notice hidden"></div>
+        <div class="grid">
+          <div><label>الصف</label><input id="aiGrade" placeholder="مثال: الصف الخامس الأساسي"></div>
+          <div><label>الدرس / الوحدة</label><input id="aiLesson" placeholder="مثال: المجهر واكتشاف الخلية"></div>
+          <div><label>عدد الأسئلة</label><input id="aiCount" type="number" min="1" max="50" value="10"></div>
+          <div><label>مستوى الصعوبة</label><select id="aiDifficulty"><option>سهل</option><option selected>متوسط</option><option>متقدم</option><option>متدرج</option></select></div>
+          <div><label>من صفحة</label><input id="aiFromPage" type="number" min="1" value="1"></div>
+          <div><label>إلى صفحة</label><input id="aiToPage" type="number" min="1" value="1"></div>
+        </div>
+        <label>أنواع الأسئلة</label>
+        <div class="grid">
+          <label><input class="ai-type" type="checkbox" value="mcq" checked style="width:auto"> اختيار من متعدد</label>
+          <label><input class="ai-type" type="checkbox" value="true_false" checked style="width:auto"> صح / خطأ</label>
+          <label><input class="ai-type" type="checkbox" value="multiple_choice" style="width:auto"> اختيار متعدد</label>
+          <label><input class="ai-type" type="checkbox" value="fill_blank" checked style="width:auto"> إكمال الفراغ</label>
+          <label><input class="ai-type" type="checkbox" value="short_answer" checked style="width:auto"> إجابة قصيرة</label>
+          <label><input class="ai-type" type="checkbox" value="essay" style="width:auto"> مقالي</label>
+          <label><input class="ai-type" type="checkbox" value="numeric" style="width:auto"> عددي</label>
+          <label><input class="ai-type" type="checkbox" value="matching" style="width:auto"> مطابقة</label>
+        </div>
+        <div class="row" style="margin-top:18px">
+          <button class="btn success" onclick="generateAIExam()">🧠 توليد الامتحان</button>
+          <button class="btn light" onclick="clearAIGenerator()">مسح</button>
+        </div>
+        <div id="aiMessage"></div>
+      </div>
+    </div>`;
+}
+let aiPdfText="", aiPdfName="";
+async function prepareAIPdf(){
+  const file=document.getElementById("aiPdf")?.files?.[0]; if(!file)return;
+  const info=document.getElementById("aiPdfInfo"); info.classList.remove("hidden"); info.textContent="جاري قراءة ملف PDF...";
+  try{
+    const bytes=new Uint8Array(await file.arrayBuffer());
+    const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+    document.getElementById("aiFromPage").max=pdf.numPages;
+    document.getElementById("aiToPage").max=pdf.numPages;
+    document.getElementById("aiToPage").value=pdf.numPages;
+    const pages=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p), content=await page.getTextContent();
+      pages.push(content.items.map(x=>x.str||"").join(" ").replace(/\s+/g," ").trim());
+    }
+    aiPdfText=pages.map((t,i)=>`[صفحة ${i+1}]\n${t}`).join("\n\n");
+    aiPdfName=file.name;
+    info.innerHTML=`تمت قراءة <strong>${escapeHtml(file.name)}</strong> وعدد الصفحات: <strong>${pdf.numPages}</strong>.`;
+  }catch(err){aiPdfText="";info.innerHTML=`<div class="error">تعذر قراءة PDF: ${escapeHtml(err.message)}</div>`;}
+}
+async function generateAIExam(){
+  const message=document.getElementById("aiMessage");
+  if(!aiPdfText){message.innerHTML=`<div class="error">اختر ملف PDF وانتظر حتى تكتمل قراءته.</div>`;return;}
+  const from=Math.max(1,Number(document.getElementById("aiFromPage").value||1));
+  const to=Math.max(from,Number(document.getElementById("aiToPage").value||from));
+  const selectedPages=aiPdfText.split(/\n\n(?=\[صفحة \d+\])/).filter(block=>{
+    const m=block.match(/^\[صفحة (\d+)\]/), n=m?Number(m[1]):0; return n>=from&&n<=to;
+  }).join("\n\n");
+  const types=[...document.querySelectorAll(".ai-type:checked")].map(x=>x.value);
+  if(!types.length){message.innerHTML=`<div class="error">اختر نوع سؤال واحدًا على الأقل.</div>`;return;}
+  message.innerHTML=`<div class="notice">🧠 جارٍ توليد ${document.getElementById("aiCount").value} سؤالًا...</div>`;
+  const {data,error}=await sb.functions.invoke("generate-ai-exam",{body:{
+    source_text:selectedPages,grade:document.getElementById("aiGrade").value.trim(),
+    lesson:document.getElementById("aiLesson").value.trim(),count:Number(document.getElementById("aiCount").value||10),
+    difficulty:document.getElementById("aiDifficulty").value,types
+  }});
+  if(error){message.innerHTML=`<div class="error">${escapeHtml(error.message||"تعذر الاتصال بخدمة التوليد.")}</div>`;return;}
+  if(data?.error){message.innerHTML=`<div class="error">${escapeHtml(data.error)}</div>`;return;}
+  const qs=data.questions||[];
+  if(!qs.length){message.innerHTML=`<div class="error">لم يتم توليد أسئلة.</div>`;return;}
+  editorQuestions=qs.map((q,i)=>({id:null,question_text:q.question_text||"",question_type:q.question_type||"mcq",points:Number(q.points||1),
+    options:q.options||[],correct_answer:q.correct_answer??null,accepted_answers:q.accepted_answers||[],matching_pairs:q.matching_pairs||[],image_url:"",
+    manual_grading:Boolean(q.manual_grading),required:true,sort_order:i+1}));
+  const draftTitle=`مسودة امتحان: ${document.getElementById("aiLesson").value.trim()||aiPdfName||"مولد بالذكاء الاصطناعي"}`;
+  await sb.from("ai_exam_drafts").insert({
+    teacher_id:currentUser.id,title:draftTitle,subject:"العلوم والحياة",grade:document.getElementById("aiGrade").value.trim(),
+    source_name:aiPdfName,source_text:selectedPages.slice(0,180000),
+    generation_settings:{lesson:document.getElementById("aiLesson").value.trim(),count:Number(document.getElementById("aiCount").value||10),
+      difficulty:document.getElementById("aiDifficulty").value,types,from_page:from,to_page:to},
+    questions:editorQuestions,status:"draft"
+  });
+  currentTest={title:draftTitle,subject:"العلوم والحياة",grade:document.getElementById("aiGrade").value.trim(),
+    description:"مسودة مولدة بالذكاء الاصطناعي — راجع الأسئلة والإجابات قبل إنشاء الامتحان.",duration_minutes:30,show_result:true,allow_retake:true};
+  message.innerHTML=`<div class="success-box">تم توليد ${qs.length} سؤالًا. سيتم فتح محرر الامتحان الآن لمراجعة الأسئلة والإجابات قبل الاعتماد.</div>`;
+  setTimeout(renderTestEditor,500);
+}
+function clearAIGenerator(){aiPdfText="";aiPdfName="";renderAIGenerator();}
 
 /* =========================================================
    إنشاء اختبار
